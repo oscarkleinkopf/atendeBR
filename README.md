@@ -31,6 +31,22 @@ Abre [http://localhost:3000](http://localhost:3000) → **Probar demo** → elig
 - Dashboard colaborador (progreso, rachas, badges, historial)
 - Dashboard supervisor (avance, atrasados, scores)
 - Biblioteca de frases descargable (CSV)
+- **TTS pt-BR** en lecciones y frases (patrón de [Ulpan](https://github.com/oscarkleinkopf/Ulpan))
+- Progreso local + rachas/XP (mismo enfoque de sync local que Ulpan)
+- Magic link / Google vía Supabase Auth (+ demo multi-rol)
+
+## Herencia de Ulpan
+
+Reutilizamos patrones probados del repo **Ulpan Hibrit**:
+
+| Ulpan | atendeBR |
+| --- | --- |
+| `speak.ts` + `/api/tts` (hebreo) | `speak.ts` + `/api/tts` (pt-BR) |
+| `progress.ts` local + rachas/XP | `progress-local.ts` |
+| Magic link / Google Supabase | Login + `/auth/callback` |
+| Demo usable sin cloud | Roles demo por cookie |
+
+El schema multi-tenant de atendeBR es propio (empresas, rutas, simulaciones); Ulpan aporta la UX de aprendizaje de idiomas.
 
 ## Variables de entorno
 

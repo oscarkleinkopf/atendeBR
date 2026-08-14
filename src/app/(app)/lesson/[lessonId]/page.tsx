@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { LessonActions } from "@/components/learning/lesson-actions";
+import { SpeakButton } from "@/components/SpeakButton";
 import { getDemoSession, getLesson } from "@/lib/data/session";
 
 function renderMarkdown(md: string) {
@@ -111,12 +112,19 @@ export default async function LessonPage({
         <aside className="space-y-4">
           {lesson.audio_script && (
             <div className="rounded-3xl border border-teal-900/10 bg-gradient-to-br from-teal-900 to-teal-700 p-5 text-white shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
-                Guion / audio
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
+                  Guion / audio
+                </p>
+                <SpeakButton
+                  text={lesson.audio_script}
+                  label="Escuchar guion"
+                  className="border-white/20 bg-white/15 text-white hover:bg-white/25"
+                />
+              </div>
               <p className="mt-3 text-lg leading-relaxed">{lesson.audio_script}</p>
               <p className="mt-4 text-xs text-teal-100/70">
-                En producción: reproducción de audio desde Supabase Storage.
+                TTS pt-BR (patrón Ulpan: Web Speech → /api/tts → Google TTS).
               </p>
             </div>
           )}
@@ -127,9 +135,15 @@ export default async function LessonPage({
               </h2>
               <ul className="mt-3 space-y-3">
                 {lesson.phrases_json.map((phrase) => (
-                  <li key={phrase.pt} className="rounded-xl bg-[var(--sand)] px-3 py-2">
-                    <p className="font-semibold text-teal-900">{phrase.pt}</p>
-                    <p className="text-sm text-teal-900/60">{phrase.es}</p>
+                  <li
+                    key={phrase.pt}
+                    className="flex items-start justify-between gap-3 rounded-xl bg-[var(--sand)] px-3 py-2"
+                  >
+                    <div>
+                      <p className="font-semibold text-teal-900">{phrase.pt}</p>
+                      <p className="text-sm text-teal-900/60">{phrase.es}</p>
+                    </div>
+                    <SpeakButton text={phrase.pt} label={`Escuchar ${phrase.pt}`} />
                   </li>
                 ))}
               </ul>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 const roles = [
   {
@@ -29,6 +30,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [magicNote, setMagicNote] = useState<string | null>(null);
+  const [magicError, setMagicError] = useState<string | null>(null);
+  const cloudReady = isSupabaseConfigured();
 
   async function enterDemo(role: string) {
     setLoading(role);
@@ -41,11 +44,48 @@ export default function LoginPage() {
     router.refresh();
   }
 
-  function requestMagicLink(e?: React.FormEvent) {
-    e?.preventDefault();
-    setMagicNote(
-      "Magic link / Google se activan al conectar Supabase Auth. Por ahora usa la demo multi-rol.",
-    );
+  async function requestMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setMagicNote(null);
+    setMagicError(null);
+    const supabase = createClient();
+    if (!supabase) {
+      setMagicNote(
+        "Supabase no configurado. Usa la demo multi-rol abajo (como en Ulpan sin cloud).",
+      );
+      return;
+    }
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+      search.get("next") || "/dashboard",
+    )}`;
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo },
+    });
+    if (error) {
+      setMagicError(error.message);
+      return;
+    }
+    setMagicNote("Revisa tu correo: te enviamos un magic link (patrón Ulpan/Supabase).");
+  }
+
+  async function signInGoogle() {
+    setMagicNote(null);
+    setMagicError(null);
+    const supabase = createClient();
+    if (!supabase) {
+      setMagicNote("Supabase no configurado. Usa la demo multi-rol.");
+      return;
+    }
+    const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: { access_type: "offline", prompt: "select_account" },
+      },
+    });
+    if (error) setMagicError(error.message);
   }
 
   return (
@@ -65,7 +105,16 @@ export default function LoginPage() {
               Entra a tu espacio
             </h1>
             <p className="mt-2 text-teal-900/65">
-              Login con email + magic link o Google (Supabase). Para el MVP, elige un rol demo.
+              Auth Supabase (magic link / Google), mismo enfoque que{" "}
+              <a
+                className="font-semibold text-teal-800 underline"
+                href="https://github.com/oscarkleinkopf/Ulpan"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Ulpan
+              </a>
+              . Cloud: {cloudReady ? "listo" : "pendiente"}.
             </p>
 
             <form onSubmit={requestMagicLink} className="mt-6 space-y-3">
@@ -83,11 +132,12 @@ export default function LoginPage() {
               <Button type="submit" className="w-full">
                 Enviar magic link
               </Button>
-              <Button type="button" variant="secondary" className="w-full" onClick={() => requestMagicLink()}>
+              <Button type="button" variant="secondary" className="w-full" onClick={() => void signInGoogle()}>
                 Continuar con Google
               </Button>
             </form>
-            {magicNote && <p className="mt-3 text-sm text-amber-800">{magicNote}</p>}
+            {magicNote && <p className="mt-3 text-sm text-teal-800">{magicNote}</p>}
+            {magicError && <p className="mt-3 text-sm text-rose-700">{magicError}</p>}
           </section>
 
           <section className="space-y-3">

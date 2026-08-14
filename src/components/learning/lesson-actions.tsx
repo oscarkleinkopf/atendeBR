@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  loadProgress,
+  markLessonComplete,
+  saveProgress,
+} from "@/lib/progress-local";
 import type { QuizQuestion } from "@/types";
 
 export function LessonActions({
@@ -30,6 +35,9 @@ export function LessonActions({
     setSaving(true);
     const score = gradeQuiz();
     setQuizResult(score);
+    const next = markLessonComplete(loadProgress(), lessonId, score);
+    saveProgress(next);
+    window.dispatchEvent(new Event("atendebr-progress"));
     await fetch("/api/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

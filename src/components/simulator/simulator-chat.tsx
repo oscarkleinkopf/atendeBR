@@ -53,6 +53,11 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
       }
       if (data.score) {
         setScore(data.score);
+        const { loadProgress, recordSimulation, saveProgress } = await import(
+          "@/lib/progress-local"
+        );
+        saveProgress(recordSimulation(loadProgress(), data.score.overall));
+        window.dispatchEvent(new Event("atendebr-progress"));
       }
     } finally {
       setLoading(false);
@@ -74,7 +79,14 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
         }),
       });
       const data = await res.json();
-      if (data.score) setScore(data.score);
+      if (data.score) {
+        setScore(data.score);
+        const { loadProgress, recordSimulation, saveProgress } = await import(
+          "@/lib/progress-local"
+        );
+        saveProgress(recordSimulation(loadProgress(), data.score.overall));
+        window.dispatchEvent(new Event("atendebr-progress"));
+      }
     } finally {
       setLoading(false);
     }
