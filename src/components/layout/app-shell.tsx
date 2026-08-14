@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   BookOpen,
   LayoutDashboard,
@@ -10,9 +10,8 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { canViewTeam, cn } from "@/lib/utils";
 import type { Profile } from "@/types";
-import { canViewTeam } from "@/lib/utils";
 
 const links = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
@@ -26,20 +25,14 @@ export function AppShell({
   profile,
   companyName,
   children,
+  onLogout,
 }: {
   profile: Profile;
   companyName: string;
   children: React.ReactNode;
+  onLogout?: () => void;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
-
-  async function logout() {
-    await fetch("/api/auth/demo", { method: "DELETE" });
-    router.push("/login");
-    router.refresh();
-  }
-
   const visible = links.filter((l) => !l.teamOnly || canViewTeam(profile.role));
 
   return (
@@ -79,7 +72,7 @@ export function AppShell({
               <p className="text-xs text-teal-900/55">{companyName}</p>
             </div>
             <button
-              onClick={logout}
+              onClick={onLogout}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-teal-900/10 bg-white text-teal-900 hover:bg-teal-50"
               aria-label="Cerrar sesión"
             >

@@ -94,7 +94,10 @@ async function playBlob(blob: Blob): Promise<SpeakResult> {
 async function speakViaProxy(text: string): Promise<SpeakResult | null> {
   if (proxyKnownDead) return null;
   try {
-    const endpoint = new URL("/api/tts", window.location.origin);
+    const endpoint = new URL(
+      `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/api/tts`,
+      window.location.origin,
+    );
     endpoint.searchParams.set("q", text);
     endpoint.searchParams.set("tl", "pt-BR");
     const res = await fetchWithTimeout(endpoint.toString(), 1200);

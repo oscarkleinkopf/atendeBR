@@ -21,6 +21,27 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
     [messages],
   );
 
+  async function persistScore(nextScore: SimulationScore) {
+    setScore(nextScore);
+    const { loadProgress, recordSimulation, saveProgress } = await import("@/lib/progress-local");
+    saveProgress(recordSimulation(loadProgress(), nextScore.overall));
+    window.dispatchEvent(new Event("atendebr-progress"));
+  }
+
+  async function runClientContinue(next: ChatMessage[]) {
+    const { heuristicCustomerReply } = await import("@/lib/ai/heuristic");
+    const reply = heuristicCustomerReply(scenario, next);
+    setMessages((prev) => [
+      ...prev,
+      { role: "customer", content: reply, at: new Date().toISOString() },
+    ]);
+  }
+
+  async function runClientEvaluate(msgs: ChatMessage[]) {
+    const { heuristicScore } = await import("@/lib/ai/heuristic");
+    await persistScore(heuristicScore(scenario, msgs));
+  }
+
   async function send() {
     const text = input.trim();
     if (!text || loading || score) return;
@@ -34,30 +55,30 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/simulator", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scenarioId: scenario.id,
-          messages: next,
-          action: turns >= 2 ? "evaluate" : "continue",
-          durationSeconds: Math.round((Date.now() - startedAt) / 1000),
-        }),
-      });
-      const data = await res.json();
-      if (data.reply) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "customer", content: data.reply, at: new Date().toISOString() },
-        ]);
-      }
-      if (data.score) {
-        setScore(data.score);
-        const { loadProgress, recordSimulation, saveProgress } = await import(
-          "@/lib/progress-local"
-        );
-        saveProgress(recordSimulation(loadProgress(), data.score.overall));
-        window.dispatchEvent(new Event("atendebr-progress"));
+      const action = turns >= 2 ? "evaluate" : "continue";
+      try {
+        const res = await fetch("/api/simulator", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scenarioId: scenario.id,
+            messages: next,
+            action,
+            durationSeconds: Math.round((Date.now() - startedAt) / 1000),
+          }),
+        });
+        if (!res.ok) throw new Error("api unavailable");
+        const data = await res.json();
+        if (data.reply) {
+          setMessages((prev) => [
+            ...prev,
+            { role: "customer", content: data.reply, at: new Date().toISOString() },
+          ]);
+        }
+        if (data.score) await persistScore(data.score);
+      } catch {
+        if (action === "evaluate") await runClientEvaluate(next);
+        else await runClientContinue(next);
       }
     } finally {
       setLoading(false);
@@ -68,24 +89,22 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
     if (loading || score || turns === 0) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/simulator", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scenarioId: scenario.id,
-          messages,
-          action: "evaluate",
-          durationSeconds: Math.round((Date.now() - startedAt) / 1000),
-        }),
-      });
-      const data = await res.json();
-      if (data.score) {
-        setScore(data.score);
-        const { loadProgress, recordSimulation, saveProgress } = await import(
-          "@/lib/progress-local"
-        );
-        saveProgress(recordSimulation(loadProgress(), data.score.overall));
-        window.dispatchEvent(new Event("atendebr-progress"));
+      try {
+        const res = await fetch("/api/simulator", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scenarioId: scenario.id,
+            messages,
+            action: "evaluate",
+            durationSeconds: Math.round((Date.now() - startedAt) / 1000),
+          }),
+        });
+        if (!res.ok) throw new Error("api unavailable");
+        const data = await res.json();
+        if (data.score) await persistScore(data.score);
+      } catch {
+        await runClientEvaluate(messages);
       }
     } finally {
       setLoading(false);

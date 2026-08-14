@@ -1,23 +1,17 @@
-import { redirect } from "next/navigation";
-import { AppShell } from "@/components/layout/app-shell";
 import { PathLessonList } from "@/components/learning/path-lesson-list";
-import { getDemoSession, getLearningPath } from "@/lib/data/session";
+import { DEMO_LESSONS, DEMO_PATH } from "@/lib/demo-data";
 
-export default async function PathPage() {
-  const session = await getDemoSession();
-  if (!session) redirect("/login");
+export function generateStaticParams() {
+  return [{ pathSlug: DEMO_PATH.slug }, { pathSlug: "atencion-al-cliente" }];
+}
 
-  const path = getLearningPath();
-  const lessons = path.lessons ?? [];
-
+export default function PathPage() {
   return (
-    <AppShell profile={session.profile} companyName={session.company.name}>
-      <PathLessonList
-        lessons={lessons}
-        pathTitle={path.title}
-        pathDescription={path.description}
-        estimatedHours={path.estimated_hours}
-      />
-    </AppShell>
+    <PathLessonList
+      lessons={DEMO_LESSONS}
+      pathTitle={DEMO_PATH.title}
+      pathDescription={DEMO_PATH.description}
+      estimatedHours={DEMO_PATH.estimated_hours}
+    />
   );
 }

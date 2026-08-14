@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScoreRing } from "@/components/dashboard/score-ring";
+import { useDemoSessionState } from "@/components/layout/auth-gate";
 import { loadProgress, type AtendeProgress } from "@/lib/progress-local";
 import { formatPercent } from "@/lib/utils";
 import type { Lesson, SimulationAttempt } from "@/types";
@@ -22,6 +23,7 @@ export function CollaboratorProgress({
   fallbackAttempts: SimulationAttempt[];
   initialName: string;
 }) {
+  const session = useDemoSessionState();
   const [progress, setProgress] = useState<AtendeProgress | null>(null);
 
   useEffect(() => {
@@ -42,18 +44,19 @@ export function CollaboratorProgress({
     lessons.find((l) => !state?.completedLessons.includes(l.id)) ?? lessons[0];
   const avgScore = state?.lastSimulationScore ?? null;
   const streak = state?.streak ?? 0;
+  const displayName = session?.profile.full_name ?? initialName;
 
   return (
     <>
       <div className="mb-8">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-900/45">
-          Hola, {initialName.split(" ")[0]}
+          Hola, {displayName.split(" ")[0]}
         </p>
         <h1 className="mt-1 font-[family-name:var(--font-display)] text-4xl font-bold text-teal-950">
           Tu progreso
         </h1>
         <p className="mt-1 text-sm text-teal-900/50">
-          Sync local (patrón Ulpan) · se guarda en este dispositivo
+          Sync local (patrón Ulpan) · funciona en GitHub Pages
         </p>
       </div>
 

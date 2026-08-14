@@ -1,17 +1,11 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { difficultyLabel } from "@/lib/utils";
-import { getDemoSession, getScenarios } from "@/lib/data/session";
+import { DEMO_SCENARIOS } from "@/lib/demo-data";
 
-export default async function SimulatorIndexPage() {
-  const session = await getDemoSession();
-  if (!session) redirect("/login");
-  const scenarios = getScenarios();
-
+export default function SimulatorIndexPage() {
   return (
-    <AppShell profile={session.profile} companyName={session.company.name}>
+    <>
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-900/45">
         Diferenciador core
       </p>
@@ -24,7 +18,7 @@ export default async function SimulatorIndexPage() {
       </p>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {scenarios.map((scenario) => (
+        {DEMO_SCENARIOS.map((scenario) => (
           <Link
             key={scenario.id}
             href={`/simulator/${scenario.id}`}
@@ -41,6 +35,6 @@ export default async function SimulatorIndexPage() {
           </Link>
         ))}
       </div>
-    </AppShell>
+    </>
   );
 }

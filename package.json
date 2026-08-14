@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:ghpages": "node scripts/build-ghpages.mjs",
+    "pages:sync": "node scripts/sync-pages.mjs",
     "start": "next start",
     "lint": "eslint"
   },

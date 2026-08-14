@@ -38,11 +38,15 @@ export function LessonActions({
     const next = markLessonComplete(loadProgress(), lessonId, score);
     saveProgress(next);
     window.dispatchEvent(new Event("atendebr-progress"));
-    await fetch("/api/progress", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lessonId, score, timeSpentSeconds: 360 }),
-    });
+    try {
+      await fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId, score, timeSpentSeconds: 360 }),
+      });
+    } catch {
+      /* Pages static */
+    }
     setSaving(false);
     router.push("/dashboard");
     router.refresh();

@@ -9,6 +9,25 @@ SaaS B2B para equipos chilenos que atienden clientes de Brasil: microlearning de
 - Supabase (Auth + Postgres + RLS multi-tenant)
 - OpenAI opcional para el simulador (fallback heurístico sin API key)
 
+## GitHub Pages
+
+Sitio estático (mismo enfoque que Ulpan):
+
+```bash
+npm run build:ghpages   # export a out/ con basePath /atendeBR
+npm run pages:sync      # opcional: copia a docs/
+```
+
+**URL:** https://oscarkleinkopf.github.io/atendeBR/
+
+### Activar Pages (una vez)
+
+1. Repo → **Settings → Pages**
+2. Source: **GitHub Actions** (recomendado; el workflow `.github/workflows/deploy-pages.yml` publica en cada push a `main`)
+3. O Source: **Deploy from a branch** → branch `main` → folder `/docs` (tras `npm run pages:sync`)
+
+En Pages el simulador y el progreso corren 100% en el navegador (sin API server).
+
 ## Demo rápida
 
 ```bash

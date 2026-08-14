@@ -1,28 +1,14 @@
-import { redirect } from "next/navigation";
-import { AppShell } from "@/components/layout/app-shell";
 import { CollaboratorProgress } from "@/components/dashboard/collaborator-progress";
-import {
-  getAttemptsForUser,
-  getDemoSession,
-  getLearningPath,
-} from "@/lib/data/session";
+import { DEMO_LESSONS, DEMO_PATH, getDemoAttempts, DEMO_USERS } from "@/lib/demo-data";
 
-export default async function DashboardPage() {
-  const session = await getDemoSession();
-  if (!session) redirect("/login");
-
-  const path = getLearningPath();
-  const lessons = path.lessons ?? [];
-  const attempts = await getAttemptsForUser(session.profile.id);
-
+export default function DashboardPage() {
+  const userId = DEMO_USERS.collaborator.id;
   return (
-    <AppShell profile={session.profile} companyName={session.company.name}>
-      <CollaboratorProgress
-        lessons={lessons}
-        pathTitle={path.title}
-        fallbackAttempts={attempts}
-        initialName={session.profile.full_name}
-      />
-    </AppShell>
+    <CollaboratorProgress
+      lessons={DEMO_LESSONS}
+      pathTitle={DEMO_PATH.title}
+      fallbackAttempts={getDemoAttempts(userId)}
+      initialName={DEMO_USERS.collaborator.full_name}
+    />
   );
 }

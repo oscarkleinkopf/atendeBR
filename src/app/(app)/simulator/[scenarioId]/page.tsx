@@ -1,27 +1,27 @@
-import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
+import { notFound } from "next/navigation";
 import { SimulatorChat } from "@/components/simulator/simulator-chat";
-import { getDemoSession, getScenario } from "@/lib/data/session";
+import { DEMO_SCENARIOS } from "@/lib/demo-data";
+
+export function generateStaticParams() {
+  return DEMO_SCENARIOS.map((scenario) => ({ scenarioId: scenario.id }));
+}
 
 export default async function SimulatorScenarioPage({
   params,
 }: {
   params: Promise<{ scenarioId: string }>;
 }) {
-  const session = await getDemoSession();
-  if (!session) redirect("/login");
-
   const { scenarioId } = await params;
-  const scenario = getScenario(scenarioId);
+  const scenario = DEMO_SCENARIOS.find((s) => s.id === scenarioId || s.slug === scenarioId);
   if (!scenario) notFound();
 
   return (
-    <AppShell profile={session.profile} companyName={session.company.name}>
+    <>
       <Link href="/simulator" className="mb-4 inline-block text-sm font-medium text-teal-700 hover:underline">
         ← Todos los escenarios
       </Link>
       <SimulatorChat scenario={scenario} />
-    </AppShell>
+    </>
   );
 }

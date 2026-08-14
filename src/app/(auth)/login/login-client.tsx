@@ -35,11 +35,17 @@ export default function LoginPage() {
 
   async function enterDemo(role: string) {
     setLoading(role);
-    await fetch("/api/auth/demo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role }),
-    });
+    const { setDemoRole } = await import("@/lib/demo-auth");
+    setDemoRole(role as "collaborator" | "supervisor" | "company_admin");
+    try {
+      await fetch("/api/auth/demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+    } catch {
+      /* GitHub Pages: sin API */
+    }
     router.push(search.get("next") || "/dashboard");
     router.refresh();
   }
@@ -55,7 +61,7 @@ export default function LoginPage() {
       );
       return;
     }
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+    const redirectTo = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/callback?next=${encodeURIComponent(
       search.get("next") || "/dashboard",
     )}`;
     const { error } = await supabase.auth.signInWithOtp({
@@ -77,7 +83,7 @@ export default function LoginPage() {
       setMagicNote("Supabase no configurado. Usa la demo multi-rol.");
       return;
     }
-    const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
+    const redirectTo = `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/callback?next=/dashboard`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

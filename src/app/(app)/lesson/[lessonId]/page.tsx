@@ -1,13 +1,11 @@
-import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { AppShell } from "@/components/layout/app-shell";
+import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { LessonActions } from "@/components/learning/lesson-actions";
 import { SpeakButton } from "@/components/SpeakButton";
-import { getDemoSession, getLesson } from "@/lib/data/session";
+import { DEMO_LESSONS } from "@/lib/demo-data";
 
 function renderMarkdown(md: string) {
-  // Minimal markdown for MVP content (headings, lists, bold, italic, tables)
   const lines = md.split("\n");
   const html: string[] = [];
   let inUl = false;
@@ -78,20 +76,21 @@ function renderMarkdown(md: string) {
   return html.join("\n");
 }
 
+export function generateStaticParams() {
+  return DEMO_LESSONS.map((lesson) => ({ lessonId: lesson.id }));
+}
+
 export default async function LessonPage({
   params,
 }: {
   params: Promise<{ lessonId: string }>;
 }) {
-  const session = await getDemoSession();
-  if (!session) redirect("/login");
-
   const { lessonId } = await params;
-  const lesson = getLesson(lessonId);
+  const lesson = DEMO_LESSONS.find((l) => l.id === lessonId || l.slug === lessonId);
   if (!lesson) notFound();
 
   return (
-    <AppShell profile={session.profile} companyName={session.company.name}>
+    <>
       <Link href="/path/atencion-al-cliente" className="text-sm font-medium text-teal-700 hover:underline">
         ← Volver a la ruta
       </Link>
@@ -123,9 +122,6 @@ export default async function LessonPage({
                 />
               </div>
               <p className="mt-3 text-lg leading-relaxed">{lesson.audio_script}</p>
-              <p className="mt-4 text-xs text-teal-100/70">
-                TTS pt-BR (patrón Ulpan: Web Speech → /api/tts → Google TTS).
-              </p>
             </div>
           )}
           {lesson.phrases_json && lesson.phrases_json.length > 0 && (
@@ -154,6 +150,6 @@ export default async function LessonPage({
           </div>
         </aside>
       </div>
-    </AppShell>
+    </>
   );
 }
