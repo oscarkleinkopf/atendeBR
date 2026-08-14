@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  --sand: #f3f6f8;
+  --ink: #0b2430;
+  --teal: #0a4d68;
+  --gold: #f5b700;
+  --background: var(--sand);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+* {
+  border-color: rgba(11, 36, 48, 0.12);
+}
+
+.prose-lesson h1 {
+  font-family: var(--font-display), serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: #0b2430;
+}
+
+.prose-lesson h2 {
+  font-family: var(--font-display), serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #0a4d68;
+}
+
+.prose-lesson p,
+.prose-lesson li {
+  color: rgba(11, 36, 48, 0.82);
+  line-height: 1.65;
+  margin-bottom: 0.75rem;
+}
+
+.prose-lesson ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.prose-lesson table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.prose-lesson th,
+.prose-lesson td {
+  border: 1px solid rgba(10, 77, 104, 0.15);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.prose-lesson strong {
+  color: #0b2430;
+}
+
+.prose-lesson em {
+  color: #0a4d68;
+}
