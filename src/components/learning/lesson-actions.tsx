@@ -39,6 +39,12 @@ export function LessonActions({
     saveProgress(next);
     window.dispatchEvent(new Event("atendebr-progress"));
     try {
+      const { saveLessonProgressCloud } = await import("@/lib/cloud/session");
+      await saveLessonProgressCloud(lessonId, score, 360);
+    } catch {
+      /* demo / Pages */
+    }
+    try {
       await fetch("/api/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

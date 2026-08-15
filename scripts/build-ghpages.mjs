@@ -12,7 +12,6 @@ import {
   cpSync,
   writeFileSync,
   readdirSync,
-  statSync,
 } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -42,6 +41,7 @@ const ROOT_PUBLISH = new Set([
   "phrases",
   "simulator",
   "team",
+  "onboarding",
 ]);
 
 function stashApi() {

@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScoreRing } from "@/components/dashboard/score-ring";
-import { useDemoSessionState } from "@/components/layout/auth-gate";
+import { useAppSession } from "@/components/layout/auth-gate";
 import { loadProgress, type AtendeProgress } from "@/lib/progress-local";
 import { formatPercent } from "@/lib/utils";
 import type { Lesson, SimulationAttempt } from "@/types";
@@ -23,17 +23,31 @@ export function CollaboratorProgress({
   fallbackAttempts: SimulationAttempt[];
   initialName: string;
 }) {
-  const session = useDemoSessionState();
+  const { session, source } = useAppSession();
   const [progress, setProgress] = useState<AtendeProgress | null>(null);
+  const [cloudAttempts, setCloudAttempts] = useState<SimulationAttempt[] | null>(null);
 
   useEffect(() => {
-    setProgress(loadProgress());
-    const onStorage = () => setProgress(loadProgress());
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("atendebr-progress", onStorage);
+    const refreshLocal = () => setProgress(loadProgress());
+    refreshLocal();
+    window.addEventListener("storage", refreshLocal);
+    window.addEventListener("atendebr-progress", refreshLocal);
+
+    void (async () => {
+      const { fetchMyLessonCompletions, fetchMyAttempts } = await import("@/lib/cloud/session");
+      const completedIds = await fetchMyLessonCompletions();
+      if (completedIds.length) {
+        const local = loadProgress();
+        const merged = Array.from(new Set([...local.completedLessons, ...completedIds]));
+        setProgress({ ...local, completedLessons: merged });
+      }
+      const attempts = await fetchMyAttempts();
+      if (attempts.length) setCloudAttempts(attempts);
+    })();
+
     return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("atendebr-progress", onStorage);
+      window.removeEventListener("storage", refreshLocal);
+      window.removeEventListener("atendebr-progress", refreshLocal);
     };
   }, []);
 
@@ -56,7 +70,9 @@ export function CollaboratorProgress({
           Tu progreso
         </h1>
         <p className="mt-1 text-sm text-teal-900/50">
-          Sync local (patrón Ulpan) · funciona en GitHub Pages
+          {source === "cloud"
+            ? "Progreso sincronizado en Supabase"
+            : "Sync local (demo) · GitHub Pages"}
         </p>
       </div>
 
@@ -146,7 +162,8 @@ export function CollaboratorProgress({
           Historial de simulaciones
         </h2>
         <div className="mt-4 space-y-3">
-          {fallbackAttempts.map((attempt) => (
+          {(cloudAttempts && cloudAttempts.length > 0 ? cloudAttempts : fallbackAttempts).map(
+            (attempt) => (
             <div
               key={attempt.id}
               className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal-900/10 bg-white px-5 py-4 shadow-sm"

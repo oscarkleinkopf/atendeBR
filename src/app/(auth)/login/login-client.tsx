@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 const roles = [
   {
@@ -31,7 +31,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [magicNote, setMagicNote] = useState<string | null>(null);
   const [magicError, setMagicError] = useState<string | null>(null);
-  const cloudReady = isSupabaseConfigured();
 
   async function enterDemo(role: string) {
     setLoading(role);
@@ -111,16 +110,8 @@ export default function LoginPage() {
               Entra a tu espacio
             </h1>
             <p className="mt-2 text-teal-900/65">
-              Auth Supabase (magic link / Google), mismo enfoque que{" "}
-              <a
-                className="font-semibold text-teal-800 underline"
-                href="https://github.com/oscarkleinkopf/Ulpan"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Ulpan
-              </a>
-              . Cloud: {cloudReady ? "listo" : "pendiente"}.
+              Magic link o Google crea tu usuario en Supabase. Después creas la empresa o te unes
+              con un código (el demo usa <span className="font-semibold">DEMO2026</span>).
             </p>
 
             <form onSubmit={requestMagicLink} className="mt-6 space-y-3">

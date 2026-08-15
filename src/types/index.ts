@@ -14,6 +14,7 @@ export interface Company {
   slug: string;
   logo_url?: string | null;
   primary_color: string;
+  invite_code?: string | null;
 }
 
 export interface Profile {

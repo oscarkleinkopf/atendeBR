@@ -1,21 +1,57 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { getDemoTeamProgress } from "@/lib/demo-data";
+import { fetchTeamProgressLive } from "@/lib/cloud/session";
 import { formatPercent, scoreColor } from "@/lib/utils";
+import type { Company, Profile, TeamMemberProgress } from "@/types";
 
-export function TeamDashboard({ companyName }: { companyName: string }) {
-  const team = getDemoTeamProgress();
+export function TeamDashboard({
+  company,
+  profile,
+  source,
+}: {
+  company: Company;
+  profile: Profile;
+  source: "cloud" | "demo" | null;
+}) {
+  const [team, setTeam] = useState<TeamMemberProgress[] | null>(
+    source === "cloud" ? null : getDemoTeamProgress(),
+  );
+  const [loading, setLoading] = useState(source === "cloud");
+
+  useEffect(() => {
+    if (source !== "cloud" || !company.id) {
+      return;
+    }
+    let alive = true;
+    void (async () => {
+      const live = await fetchTeamProgressLive(company.id, profile.role);
+      if (!alive) return;
+      if (live) setTeam(live);
+      else setTeam([]);
+      setLoading(false);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [company.id, profile.role, source]);
+
+  const rows = team ?? [];
+
   const avgCompletion =
-    team.reduce((acc, m) => acc + m.lessons_completed / m.lessons_total, 0) / team.length;
-  const scored = team.filter((m) => m.avg_simulation_score !== null);
+    rows.length === 0
+      ? 0
+      : rows.reduce((acc, m) => acc + m.lessons_completed / m.lessons_total, 0) / rows.length;
+  const scored = rows.filter((m) => m.avg_simulation_score !== null);
   const avgSim =
     scored.length > 0
       ? scored.reduce((acc, m) => acc + (m.avg_simulation_score ?? 0), 0) / scored.length
       : 0;
-  const behind = team.filter((m) => m.is_behind);
+  const behind = rows.filter((m) => m.is_behind);
 
   return (
     <>
@@ -23,11 +59,21 @@ export function TeamDashboard({ companyName }: { companyName: string }) {
         Dashboard empresa
       </p>
       <h1 className="mt-1 font-[family-name:var(--font-display)] text-4xl font-bold text-teal-950">
-        Equipo · {companyName}
+        Equipo · {company.name}
       </h1>
       <p className="mt-2 text-teal-900/65">
-        Avance por colaborador, completitud de ruta y scores de simulación.
+        {source === "cloud"
+          ? "Datos en vivo del tenant (Supabase)."
+          : "Vista demo. Entra con magic link para ver tu equipo real."}
       </p>
+
+      {source === "cloud" && company.invite_code && (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">
+          Código de invitación:{" "}
+          <span className="font-mono text-base font-bold tracking-widest">{company.invite_code}</span>
+          <span className="ml-2 text-amber-800/70">Compártelo con colaboradores.</span>
+        </div>
+      )}
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <div className="rounded-3xl border border-teal-900/10 bg-white p-5 shadow-sm">
@@ -43,7 +89,7 @@ export function TeamDashboard({ companyName }: { companyName: string }) {
             Score simulación
           </p>
           <p className={`mt-2 font-[family-name:var(--font-display)] text-4xl font-bold ${scoreColor(avgSim)}`}>
-            {Math.round(avgSim)}
+            {Math.round(avgSim) || "—"}
           </p>
         </div>
         <div className="rounded-3xl border border-teal-900/10 bg-white p-5 shadow-sm">
@@ -57,14 +103,19 @@ export function TeamDashboard({ companyName }: { companyName: string }) {
       <div className="mt-8 overflow-hidden rounded-3xl border border-teal-900/10 bg-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-teal-900/8 px-5 py-4">
           <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-teal-950">
-            Colaboradores
+            Colaboradores {loading ? "…" : `(${rows.length})`}
           </h2>
           <Button variant="secondary" size="sm">
-            Asignar ruta Atención al Cliente
+            Ruta asignada: Atención al Cliente
           </Button>
         </div>
         <div className="divide-y divide-teal-900/8">
-          {team.map((member) => {
+          {rows.length === 0 && !loading && (
+            <p className="px-5 py-6 text-sm text-teal-900/55">
+              Aún no hay colaboradores. Comparte el código de invitación.
+            </p>
+          )}
+          {rows.map((member) => {
             const pct = (member.lessons_completed / member.lessons_total) * 100;
             return (
               <div

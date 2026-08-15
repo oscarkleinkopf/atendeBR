@@ -8,7 +8,11 @@ export function createClient() {
     return null;
   }
 
-  return createBrowserClient(url, key);
+  const path = process.env.NEXT_PUBLIC_BASE_PATH || "/";
+
+  return createBrowserClient(url, key, {
+    cookieOptions: { path: path || "/" },
+  });
 }
 
 export function isSupabaseConfigured() {
