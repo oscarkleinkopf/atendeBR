@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Flesson\u002F[lessonId]","\u002Fpath\u002F[pathSlug]","\u002Fsimulator\u002F[scenarioId]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

@@ -11,22 +11,28 @@ SaaS B2B para equipos chilenos que atienden clientes de Brasil: microlearning de
 
 ## GitHub Pages
 
-Sitio estático (mismo enfoque que Ulpan):
+Sitio estático (mismo enfoque que Ulpan): archivos en la **raíz** del repo + `docs/`.
 
 ```bash
-npm run build:ghpages   # export a out/ con basePath /atendeBR
-npm run pages:sync      # opcional: copia a docs/
+npm run build:ghpages   # export → raíz + docs/ con basePath /atendeBR
 ```
 
 **URL:** https://oscarkleinkopf.github.io/atendeBR/
 
-### Activar Pages (una vez)
+### Activar Pages (obligatorio, una vez)
 
-1. Repo → **Settings → Pages**
-2. Source: **GitHub Actions** (recomendado; el workflow `.github/workflows/deploy-pages.yml` publica en cada push a `main`)
-3. O Source: **Deploy from a branch** → branch `main` → folder `/docs` (tras `npm run pages:sync`)
+Si ves **404 / Site not found**, Pages aún no está encendido:
 
-En Pages el simulador y el progreso corren 100% en el navegador (sin API server).
+1. Abre https://github.com/oscarkleinkopf/atendeBR/settings/pages
+2. **Build and deployment → Source:** Deploy from a branch
+3. **Branch:** `main`
+4. **Folder:** `/ (root)`  ← importante (no `/docs` si usas la raíz)
+5. **Save**
+6. Espera 1–2 minutos y recarga https://oscarkleinkopf.github.io/atendeBR/
+
+Alternativa: Folder `/docs` (también sincronizado).
+
+En Pages el simulador y el progreso corren en el navegador (sin API server).
 
 ## Demo rápida
 
