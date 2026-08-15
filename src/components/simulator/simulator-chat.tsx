@@ -21,11 +21,22 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
     [messages],
   );
 
-  async function persistScore(nextScore: SimulationScore) {
+  async function persistScore(nextScore: SimulationScore, msgs: ChatMessage[]) {
     setScore(nextScore);
     const { loadProgress, recordSimulation, saveProgress } = await import("@/lib/progress-local");
     saveProgress(recordSimulation(loadProgress(), nextScore.overall));
     window.dispatchEvent(new Event("atendebr-progress"));
+    try {
+      const { saveSimulationCloud } = await import("@/lib/cloud/session");
+      await saveSimulationCloud(
+        scenario.id,
+        msgs,
+        nextScore,
+        Math.round((Date.now() - startedAt) / 1000),
+      );
+    } catch {
+      /* demo */
+    }
   }
 
   async function runClientContinue(next: ChatMessage[]) {
@@ -39,7 +50,7 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
 
   async function runClientEvaluate(msgs: ChatMessage[]) {
     const { heuristicScore } = await import("@/lib/ai/heuristic");
-    await persistScore(heuristicScore(scenario, msgs));
+    await persistScore(heuristicScore(scenario, msgs), msgs);
   }
 
   async function send() {
@@ -75,7 +86,7 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
             { role: "customer", content: data.reply, at: new Date().toISOString() },
           ]);
         }
-        if (data.score) await persistScore(data.score);
+        if (data.score) await persistScore(data.score, next);
       } catch {
         if (action === "evaluate") await runClientEvaluate(next);
         else await runClientContinue(next);
@@ -102,7 +113,7 @@ export function SimulatorChat({ scenario }: { scenario: SimulationScenario }) {
         });
         if (!res.ok) throw new Error("api unavailable");
         const data = await res.json();
-        if (data.score) await persistScore(data.score);
+        if (data.score) await persistScore(data.score, messages);
       } catch {
         await runClientEvaluate(messages);
       }

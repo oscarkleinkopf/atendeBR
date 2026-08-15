@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { setDemoRole } from "@/lib/demo-auth";
 
 function CallbackInner() {
   const router = useRouter();
@@ -22,8 +21,7 @@ function CallbackInner() {
           setMessage(error.message);
           return;
         }
-        setDemoRole("collaborator");
-        router.replace(next);
+        router.replace(next || "/dashboard");
         return;
       }
 
@@ -31,8 +29,7 @@ function CallbackInner() {
       if (supabase) {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
-          setDemoRole("collaborator");
-          router.replace(next);
+          router.replace(next || "/dashboard");
           return;
         }
       }

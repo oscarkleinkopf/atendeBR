@@ -25,6 +25,13 @@ export function PathLessonList({
     const refresh = () => setCompleted(loadProgress().completedLessons);
     refresh();
     window.addEventListener("atendebr-progress", refresh);
+    void (async () => {
+      const { fetchMyLessonCompletions } = await import("@/lib/cloud/session");
+      const ids = await fetchMyLessonCompletions();
+      if (ids.length) {
+        setCompleted((prev) => Array.from(new Set([...prev, ...ids])));
+      }
+    })();
     return () => window.removeEventListener("atendebr-progress", refresh);
   }, []);
 

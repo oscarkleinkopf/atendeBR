@@ -1,13 +1,13 @@
 "use client";
 
 import { TeamDashboard } from "@/components/dashboard/team-dashboard";
-import { useDemoSessionState } from "@/components/layout/auth-gate";
+import { useAppSession } from "@/components/layout/auth-gate";
 import { canViewTeam } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function TeamPage() {
-  const session = useDemoSessionState();
+  const { session, source } = useAppSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -20,5 +20,5 @@ export default function TeamPage() {
     return <p className="text-sm text-teal-900/60">Cargando equipo…</p>;
   }
 
-  return <TeamDashboard companyName={session.company.name} />;
+  return <TeamDashboard company={session.company} profile={session.profile} source={source} />;
 }

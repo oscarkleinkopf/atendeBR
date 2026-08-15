@@ -59,6 +59,39 @@ Abre [http://localhost:3000](http://localhost:3000) → **Probar demo** → elig
 - **TTS pt-BR** en lecciones y frases (patrón de [Ulpan](https://github.com/oscarkleinkopf/Ulpan))
 - Progreso local + rachas/XP (mismo enfoque de sync local que Ulpan)
 - Magic link / Google vía Supabase Auth (+ demo multi-rol)
+- **Persistencia real:** lecciones y simulaciones se guardan en Postgres (por tenant)
+- Onboarding: crear empresa o unirse con código (`DEMO2026`)
+- Dashboard de equipo con datos vivos (admin / supervisor)
+
+## Vercel (producto)
+
+GitHub Pages sirve el demo estático. El piloto (magic link + GPT + persistencia) corre en Vercel:
+
+```bash
+npx vercel --yes
+```
+
+En el dashboard de Vercel, configura:
+
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+OPENAI_API_KEY          # opcional, mejora el simulador
+OPENAI_MODEL=gpt-4o-mini
+```
+
+En Supabase → Authentication → URL configuration, agrega:
+
+- `http://localhost:3000/auth/callback`
+- `https://TU-PROYECTO.vercel.app/auth/callback`
+- `https://oscarkleinkopf.github.io/atendeBR/auth/callback`
+
+### Primer piloto
+
+1. Login con magic link
+2. Crea la empresa (quedas `company_admin`) o únete con `DEMO2026`
+3. Comparte el código de invitación (visible en Equipo)
+4. Completa lecciones y simulaciones: el supervisor ve avance real
 
 ## Herencia de Ulpan
 

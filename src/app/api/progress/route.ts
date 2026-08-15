@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { getDemoSession } from "@/lib/data/session";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const session = await getDemoSession();
-  if (!session) {
+  const demo = await getDemoSession();
+  const supabase = await createClient();
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+
+  if (!demo && !user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
@@ -18,6 +22,6 @@ export async function POST(request: Request) {
     lessonId: body.lessonId,
     status: "completed",
     score: body.score ?? 100,
-    userId: session.profile.id,
+    userId: user?.id ?? demo?.profile.id,
   });
 }

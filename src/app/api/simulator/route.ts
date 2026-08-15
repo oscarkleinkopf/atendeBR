@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { evaluateSimulation, generateCustomerReply } from "@/lib/ai/simulator";
 import { getDemoSession, getScenario } from "@/lib/data/session";
+import { createClient } from "@/lib/supabase/server";
 import type { ChatMessage } from "@/types";
 
 export async function POST(request: Request) {
-  const session = await getDemoSession();
-  if (!session) {
+  const demo = await getDemoSession();
+  const supabase = await createClient();
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+
+  if (!demo && !user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
       score,
       saved: true,
       durationSeconds: body.durationSeconds ?? 0,
-      userId: session.profile.id,
+      userId: user?.id ?? demo?.profile.id,
     });
   }
 
