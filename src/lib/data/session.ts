@@ -18,6 +18,7 @@ import type {
   SimulationScenario,
   TeamMemberProgress,
 } from "@/types";
+import { getDemoAuthSecret, verifyDemoCookie } from "@/lib/security/demo-cookie";
 import { canViewTeam } from "@/lib/utils";
 
 export { canViewTeam };
@@ -25,13 +26,11 @@ export { canViewTeam };
 export const DEMO_COOKIE = "atendebr_demo_role";
 
 export async function getDemoSession(): Promise<DemoSession | null> {
-  const cookieStore = await cookies();
-  const role = cookieStore.get(DEMO_COOKIE)?.value as
-    | "collaborator"
-    | "supervisor"
-    | "company_admin"
-    | undefined;
+  const secret = getDemoAuthSecret();
+  if (!secret) return null;
 
+  const cookieStore = await cookies();
+  const role = verifyDemoCookie(cookieStore.get(DEMO_COOKIE)?.value, secret);
   if (!role || !DEMO_USERS[role]) return null;
 
   return {

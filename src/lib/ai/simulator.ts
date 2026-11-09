@@ -1,6 +1,14 @@
 import OpenAI from "openai";
 import { heuristicCustomerReply, heuristicScore } from "@/lib/ai/heuristic";
+import { MAX_MESSAGE_CHARS, MAX_SIMULATOR_MESSAGES } from "@/lib/security/simulator-input";
 import type { ChatMessage, SimulationScenario, SimulationScore } from "@/types";
+
+function boundedMessages(messages: ChatMessage[]): ChatMessage[] {
+  return messages.slice(0, MAX_SIMULATOR_MESSAGES).map((message) => ({
+    ...message,
+    content: message.content.slice(0, MAX_MESSAGE_CHARS),
+  }));
+}
 
 function clamp(n: number) {
   return Math.max(0, Math.min(100, Math.round(n)));
@@ -59,14 +67,16 @@ export async function evaluateSimulation(
   scenario: SimulationScenario,
   messages: ChatMessage[],
 ): Promise<SimulationScore> {
-  const ai = await openaiScore(scenario, messages);
-  return ai ?? heuristicScore(scenario, messages);
+  const bounded = boundedMessages(messages);
+  const ai = await openaiScore(scenario, bounded);
+  return ai ?? heuristicScore(scenario, bounded);
 }
 
 export async function generateCustomerReply(
   scenario: SimulationScenario,
   messages: ChatMessage[],
 ): Promise<string> {
+  messages = boundedMessages(messages);
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (apiKey) {

@@ -1,37 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   clearDemoRole,
   getClientDemoSession,
+  subscribeDemoSession,
   type DemoRole,
 } from "@/lib/demo-auth";
 import { AppShell } from "@/components/layout/app-shell";
-import type { DemoSession } from "@/types";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [session, setSession] = useState<DemoSession | null | undefined>(undefined);
+  const session = useSyncExternalStore(
+    subscribeDemoSession,
+    getClientDemoSession,
+    () => null,
+  );
 
   useEffect(() => {
-    const current = getClientDemoSession();
-    setSession(current);
-    if (!current) {
+    if (!session) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [pathname, router]);
+  }, [pathname, router, session]);
 
-  if (session === undefined) {
+  if (!session) {
     return (
       <div className="grid min-h-screen place-items-center bg-[var(--sand)] text-teal-900">
         Cargando…
       </div>
     );
   }
-
-  if (!session) return null;
 
   async function logout() {
     clearDemoRole();
@@ -55,11 +55,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export function useDemoSessionState() {
-  const [session, setSession] = useState<DemoSession | null>(null);
-  useEffect(() => {
-    setSession(getClientDemoSession());
-  }, []);
-  return session;
+  return useSyncExternalStore(subscribeDemoSession, getClientDemoSession, () => null);
 }
 
 export type { DemoRole };
