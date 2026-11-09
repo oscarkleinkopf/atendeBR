@@ -13,6 +13,16 @@ export type AtendeProgress = {
 };
 
 const STORAGE_KEY = "atendebr-progress-v1";
+export const PROGRESS_EVENT = "atendebr-progress";
+
+export function subscribeProgress(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(PROGRESS_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(PROGRESS_EVENT, onStoreChange);
+  };
+}
 
 export function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -30,20 +40,37 @@ export function defaultProgress(): AtendeProgress {
   };
 }
 
+export const EMPTY_PROGRESS: AtendeProgress = defaultProgress();
+
+let cachedRaw: string | null = null;
+let cachedProgress: AtendeProgress = EMPTY_PROGRESS;
+
 export function loadProgress(): AtendeProgress {
-  if (typeof window === "undefined") return defaultProgress();
+  if (typeof window === "undefined") return EMPTY_PROGRESS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultProgress();
-    return { ...defaultProgress(), ...JSON.parse(raw) };
+    if (raw === cachedRaw) return cachedProgress;
+    cachedRaw = raw;
+    cachedProgress = raw ? { ...defaultProgress(), ...JSON.parse(raw) } : EMPTY_PROGRESS;
+    return cachedProgress;
   } catch {
-    return defaultProgress();
+    cachedRaw = null;
+    cachedProgress = EMPTY_PROGRESS;
+    return EMPTY_PROGRESS;
   }
+}
+
+export function getServerProgressSnapshot(): AtendeProgress {
+  return EMPTY_PROGRESS;
 }
 
 export function saveProgress(state: AtendeProgress): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const serialized = JSON.stringify(state);
+  localStorage.setItem(STORAGE_KEY, serialized);
+  cachedRaw = serialized;
+  cachedProgress = state;
+  window.dispatchEvent(new Event(PROGRESS_EVENT));
 }
 
 function bumpStreak(state: AtendeProgress): Pick<AtendeProgress, "streak" | "lastStudyDay"> {

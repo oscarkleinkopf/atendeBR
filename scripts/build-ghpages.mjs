@@ -12,7 +12,6 @@ import {
   cpSync,
   writeFileSync,
   readdirSync,
-  statSync,
 } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";

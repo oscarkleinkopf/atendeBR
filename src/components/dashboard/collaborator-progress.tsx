@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Flame, MessageSquare, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScoreRing } from "@/components/dashboard/score-ring";
 import { useDemoSessionState } from "@/components/layout/auth-gate";
-import { loadProgress, type AtendeProgress } from "@/lib/progress-local";
+import { getServerProgressSnapshot, loadProgress, subscribeProgress } from "@/lib/progress-local";
 import { formatPercent } from "@/lib/utils";
 import type { Lesson, SimulationAttempt } from "@/types";
 
@@ -24,20 +24,11 @@ export function CollaboratorProgress({
   initialName: string;
 }) {
   const session = useDemoSessionState();
-  const [progress, setProgress] = useState<AtendeProgress | null>(null);
-
-  useEffect(() => {
-    setProgress(loadProgress());
-    const onStorage = () => setProgress(loadProgress());
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("atendebr-progress", onStorage);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("atendebr-progress", onStorage);
-    };
-  }, []);
-
-  const state = progress;
+  const state = useSyncExternalStore(
+    subscribeProgress,
+    loadProgress,
+    getServerProgressSnapshot,
+  );
   const completed = state?.completedLessons.length ?? 0;
   const pct = lessons.length ? (completed / lessons.length) * 100 : 0;
   const nextLesson =

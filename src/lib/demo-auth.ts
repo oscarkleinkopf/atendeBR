@@ -8,41 +8,48 @@ import type { DemoSession } from "@/types";
 
 export const DEMO_COOKIE = "atendebr_demo_role";
 export const DEMO_STORAGE_KEY = "atendebr_demo_role";
+export const DEMO_AUTH_EVENT = "atendebr-demo-auth";
 
 export type DemoRole = "collaborator" | "supervisor" | "company_admin";
 
-function readCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
+export function subscribeDemoSession(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(DEMO_AUTH_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(DEMO_AUTH_EVENT, onStoreChange);
+  };
 }
 
 export function getDemoRole(): DemoRole | null {
   if (typeof window === "undefined") return null;
   const fromStorage = localStorage.getItem(DEMO_STORAGE_KEY);
-  const fromCookie = readCookie(DEMO_COOKIE);
-  const role = (fromStorage || fromCookie) as DemoRole | null;
-  if (role && role in DEMO_USERS) return role;
+  if (fromStorage && fromStorage in DEMO_USERS) return fromStorage as DemoRole;
   return null;
 }
 
+let cachedRole: DemoRole | null = null;
+let cachedSession: DemoSession | null = null;
+
 export function getClientDemoSession(): DemoSession | null {
   const role = getDemoRole();
-  if (!role) return null;
-  return {
-    profile: DEMO_USERS[role],
-    company: DEMO_COMPANY,
-  };
+  if (role === cachedRole) return cachedSession;
+  cachedRole = role;
+  cachedSession = role
+    ? { profile: DEMO_USERS[role], company: DEMO_COMPANY }
+    : null;
+  return cachedSession;
 }
 
 export function setDemoRole(role: DemoRole) {
   localStorage.setItem(DEMO_STORAGE_KEY, role);
-  document.cookie = `${DEMO_COOKIE}=${encodeURIComponent(role)}; path=/; max-age=${60 * 60 * 24 * 14}; samesite=lax`;
+  window.dispatchEvent(new Event(DEMO_AUTH_EVENT));
 }
 
 export function clearDemoRole() {
   localStorage.removeItem(DEMO_STORAGE_KEY);
   document.cookie = `${DEMO_COOKIE}=; path=/; max-age=0; samesite=lax`;
+  window.dispatchEvent(new Event(DEMO_AUTH_EVENT));
 }
 
 export function withBasePath(path: string) {
